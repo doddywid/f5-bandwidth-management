@@ -1,0 +1,62 @@
+when CLIENT_ACCEPTED {
+    set bytes_in 0
+    set bytes_out 0
+	log local0. "initial [TCP::remote_port]: $bytes_in $bytes_out"
+    
+    after 5000 -periodic {
+    	set raw_bytes_in [expr { [IP::stats bytes in] / 1024 } ]
+		set raw_bytes_out [expr { [IP::stats bytes out] / 1024 } ]
+		set bytes_in [expr { [IP::stats bytes in] / 1024 - $bytes_in }]
+        set bytes_out [expr { [IP::stats bytes out] / 1024 - $bytes_out }]
+		log local0. "initial [TCP::remote_port]: $bytes_in $bytes_out $raw_bytes_in $raw_bytes_out"
+		set pem_bytes_in [PEM::session info attr [IP::client_addr] eph_volume_upload]
+        if { $pem_bytes_in eq "" } {
+            set pem_bytes_in 0
+        }
+        set pem_bytes_out [PEM::session info attr [IP::client_addr] eph_volume_download]
+        if { $pem_bytes_out eq "" } {
+            set pem_bytes_out 0
+        }
+        log local0. "lookup PEM old --> downlink: $pem_bytes_out, uplink: $pem_bytes_in, [TCP::remote_port]"
+        PEM::session info attr [IP::client_addr] eph_volume_download [expr { $pem_bytes_out + $bytes_out }]
+        PEM::session info attr [IP::client_addr] eph_volume_upload [expr { $pem_bytes_in + $bytes_in }]
+        set pem_bytes_in [PEM::session info attr [IP::client_addr] eph_volume_upload]
+        if { $pem_bytes_in eq "" } {
+            set pem_bytes_in 0
+        }
+        set pem_bytes_out [PEM::session info attr [IP::client_addr] eph_volume_download]
+        if { $pem_bytes_out eq "" } {
+            set pem_bytes_out 0
+        }
+        log local0. "lookup PEM new --> downlink: $pem_bytes_out, uplink: $pem_bytes_in, [TCP::remote_port]"
+        set bytes_in $raw_bytes_in
+        set bytes_out $raw_bytes_out
+    }
+}
+when CLIENT_CLOSED {
+    	set raw_bytes_in [expr { [IP::stats bytes in] / 1024 } ]
+		set raw_bytes_out [expr { [IP::stats bytes out] / 1024 } ]
+		set bytes_in [expr { [IP::stats bytes in] / 1024 - $bytes_in }]
+        set bytes_out [expr { [IP::stats bytes out] / 1024 - $bytes_out }]
+		log local0. "initial [TCP::remote_port]: $bytes_in $bytes_out $raw_bytes_in $raw_bytes_out"
+		set pem_bytes_in [PEM::session info attr [IP::client_addr] eph_volume_upload]
+        if { $pem_bytes_in eq "" } {
+            set pem_bytes_in 0
+        }
+        set pem_bytes_out [PEM::session info attr [IP::client_addr] eph_volume_download]
+        if { $pem_bytes_out eq "" } {
+            set pem_bytes_out 0
+        }
+        log local0. "lookup PEM old --> downlink: $pem_bytes_out, uplink: $pem_bytes_in, [TCP::remote_port]"
+        PEM::session info attr [IP::client_addr] eph_volume_download [expr { $pem_bytes_out + $bytes_out }]
+        PEM::session info attr [IP::client_addr] eph_volume_upload [expr { $pem_bytes_in + $bytes_in }]
+        set pem_bytes_in [PEM::session info attr [IP::client_addr] eph_volume_upload]
+        if { $pem_bytes_in eq "" } {
+            set pem_bytes_in 0
+        }
+        set pem_bytes_out [PEM::session info attr [IP::client_addr] eph_volume_download]
+        if { $pem_bytes_out eq "" } {
+            set pem_bytes_out 0
+        }
+        log local0. "lookup PEM new --> downlink: $pem_bytes_out, uplink: $pem_bytes_in, [TCP::remote_port]"
+}
